@@ -1,3 +1,6 @@
+pub mod lexer;
+pub mod expr;
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
