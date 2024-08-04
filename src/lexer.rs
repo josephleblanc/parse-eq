@@ -12,12 +12,14 @@
 // Vec<Stmt>, we can implement Iterator for Token and Expr, as iterators are probably a better way
 // to go about this.
 
+use crate::lexer::Token::*;
+use crate::lexer::Operator::*;
 use std::error::Error;
 
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 /// Tokens are the first internal representation of the input string.
-pub(crate) enum Token {
+pub enum Token {
     // Left paren
     LParen,
     // Right paren
@@ -32,40 +34,45 @@ pub(crate) enum Token {
 
 impl Token {
 
-/// Takes input string and returns tokens.
-    fn lexer(s: &str) -> Result< Vec<Token>, Box<dyn Error>> {
-        // TODO: Convert string (or whatever input type we want) into Vec of tokens.
-        // e.g. 
-        // "(3 * 2.0 + x) / 8" => [
-        //                          LParen, 
-        //                          Number(3.0), 
-        //                          Op(Multiply), 
-        //                          Number(2.0), 
-        //                          Op(Plus),
-        //                          Var(Variable::X)
-        //                          RParen, 
-        //                          Op(Divide),
-        //                          Number(8.0)
-        //                      ]
-        // Even better would be returning prefix notation, as it is easier to build into a tree:
-        // "(3 * 2.0 + x) / 8" => [
-        //                          Divide,
-        //                          LParen, 
-        //                          Multiply, 
-        //                          Number(3.0), 
-        //                          Number(2.0), 
-        //                          Plus,
-        //                          Var(Variable::X)
-        //                          RParen, 
-        //                          Number(8.0)
-        //                      ]
+    /// Takes input string and returns tokens.
+    /// e.g. 
+    /// "(3 * 2.0 + x) / 8" => [
+    ///                          LParen, 
+    ///                          Number(3.0), 
+    ///                          Op(Multiply), 
+    ///                          Number(2.0), 
+    ///                          Op(Plus),
+    ///                          Var(Variable::X)
+    ///                          RParen, 
+    ///                          Op(Divide),
+    ///                          Number(8.0)
+    ///                      ]
+    pub fn lexer(s: &str) -> Result< Vec<Token>, Box<dyn Error>> {
         let split_chars = [
             '+', '-', '/', '*', '(', ')'
         ];
-        let mut mid_split = s.split_whitespace()
+        let mut mid_split: Vec<Token> = s.split_whitespace()
             .flat_map(|split| split.split_inclusive(split_chars))
-            .flat_map(split_nums);
-        todo!()
+            .flat_map(split_nums)
+            .flatten()
+            .filter_map(|split| {
+                if split.chars().nth(0)?.is_numeric() {
+                    Some( Number(split.parse::<f32>().expect("Could not parse number") ))
+                } else {
+                    match split {
+                        "(" => Some(LParen),
+                        ")" => Some(RParen),
+                        "+" => Some(Op(Add)),
+                        "-" => Some(Op(Subtract)),
+                        "*" => Some(Op(Multiply)),
+                        "/" => Some(Op(Divide)),
+                        "x" => Some(Var(Variable::X)),
+                        _ => None,
+                    }
+                }
+            })
+            .collect();
+        Ok( mid_split )
     }
     // TODO: Add error types for token that carry more information about the type of error
     // encountered, e.g. "Divide by zero", "Operator not followed by a number or variable", etc.
@@ -110,22 +117,22 @@ pub fn split_nums(s: &str) -> Result< Vec< &str >, Box<dyn Error>> {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 // This is placeholder for now - we could change the approach to something else,
 // e.g. We could get rid of this type and just have Token::Var(u8), where Var(0) is the first
 // variable (maybe x), and Var(1) is the second variable in the expression "( 2x - y ) / 4x"
-pub(crate) enum Variable {
+pub enum Variable {
     X,
     Y,
     Z,
     // more here
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 // An enum for the different operator types our parser can handle.
 // This enum is subject to change, as it may be better to have the operators split into binary
 // operators (e.g. Multiply, Divide) and unary (e.g. Sine, Cosine).
-pub(crate) enum Operator{
+pub enum Operator{
     Multiply,
     Divide,
     Add,
