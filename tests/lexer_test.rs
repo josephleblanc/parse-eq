@@ -92,3 +92,25 @@ fn lexer_operator_parentheses() {
     assert_eq!(multiply, Token::lexer("(1*2)").unwrap());
     assert_eq!(divide, Token::lexer("(1/2)").unwrap());
 }
+
+#[test]
+fn lexer_operator_parentheses_whitespace() {
+    use parse_eq::lexer::Token;
+    use parse_eq::lexer::Token::*;
+    use parse_eq::lexer::Operator::*;
+
+    let add = vec![LParen, Number(1.0), Op(Add), Number(2.0), RParen];
+
+    assert_eq!(add, Token::lexer("(1+2)").unwrap());
+    assert_eq!(add, Token::lexer(" (1+2)").unwrap());
+    assert_eq!(add, Token::lexer("(1+2) ").unwrap());
+    assert_eq!(add, Token::lexer(" (1+2) ").unwrap());
+    assert_eq!(add, Token::lexer(" ( 1+2) ").unwrap());
+    assert_eq!(add, Token::lexer(" ( 1 +2) ").unwrap());
+    assert_eq!(add, Token::lexer(" ( 1 + 2) ").unwrap());
+    assert_eq!(add, Token::lexer(" ( 1 + 2 ) ").unwrap());
+    assert_eq!(add, Token::lexer("       ( 1 + 2 ) ").unwrap());
+    assert_eq!(add, Token::lexer("       (         1 + 2 ) ").unwrap());
+    assert_eq!(add, Token::lexer("       (         1       + 2 ) ").unwrap());
+
+}
