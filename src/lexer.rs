@@ -75,22 +75,31 @@ impl Token {
 // Helper function used in Token::lexer
 // note: it may be better to handle this functionality through the split_chars variable in 
 // Token::lexer, depending on how many variables we should account for before hand.
-fn split_nums(s: &str) -> Result< Vec< &str >, Box<dyn Error>> {
+pub fn split_nums(s: &str) -> Result< Vec< &str >, Box<dyn Error>> {
     let mut split_indicies: Vec<usize> = vec![];
     if s.len() > 1 {
         let s_iter = s.chars().zip(s.chars().skip(1)).enumerate();
         for (i, ( current, next) ) in s_iter {
-            match (current.is_numeric(), next.is_numeric()) {
+            match (current.is_numeric() || current == '.', 
+                next.is_numeric() || next == '.') {
                 (false, true) => split_indicies.push(i),
-                (true, false) => split_indicies.push(i),
+                (true, false) => split_indicies.push(i + 1),
                 _ => ()
             }
         }
         // TODO: make the split in middle through .split_at() recursive
         let mut splits_vec: Vec<&str> = vec![];
-        splits_vec.push(s.split_at(split_indicies[0]).0);
-        for split_i in &split_indicies[..] {
-            splits_vec.push(s.split_at(split_indicies[*split_i]).1);
+        if !split_indicies.is_empty() {
+            // note: split_at starts at 1 while indexing starts at 0, that is why +1 below
+            splits_vec.push(s.split_at(split_indicies[0]).0);
+            for split_i in &split_indicies[..] {
+                let second_split = s.split_at(*split_i).1;
+                if !second_split.is_empty() {
+                    splits_vec.push(second_split);
+                }
+            }
+        } else { 
+            splits_vec.push(s);
         }
         Ok(splits_vec)
 
