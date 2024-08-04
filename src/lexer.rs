@@ -59,10 +59,46 @@ impl Token {
         //                          RParen, 
         //                          Number(8.0)
         //                      ]
+        let split_chars = [
+            '+', '-', '/', '*', '(', ')'
+        ];
+        let mut mid_split = s.split_whitespace()
+            .flat_map(|split| split.split_inclusive(split_chars))
+            .flat_map(split_nums);
         todo!()
     }
     // TODO: Add error types for token that carry more information about the type of error
     // encountered, e.g. "Divide by zero", "Operator not followed by a number or variable", etc.
+}
+
+// Split numbers from variables, e.g. 132x becomes ['132', 'x'], or (132) becomes ['(', '132', ')']
+// Helper function used in Token::lexer
+// note: it may be better to handle this functionality through the split_chars variable in 
+// Token::lexer, depending on how many variables we should account for before hand.
+fn split_nums(s: &str) -> Result< Vec< &str >, Box<dyn Error>> {
+    let mut split_indicies: Vec<usize> = vec![];
+    if s.len() > 1 {
+        let s_iter = s.chars().zip(s.chars().skip(1)).enumerate();
+        for (i, ( current, next) ) in s_iter {
+            match (current.is_numeric(), next.is_numeric()) {
+                (false, true) => split_indicies.push(i),
+                (true, false) => split_indicies.push(i),
+                _ => ()
+            }
+        }
+        // TODO: make the split in middle through .split_at() recursive
+        let mut splits_vec: Vec<&str> = vec![];
+        splits_vec.push(s.split_at(split_indicies[0]).0);
+        for split_i in &split_indicies[..] {
+            splits_vec.push(s.split_at(split_indicies[*split_i]).1);
+        }
+        Ok(splits_vec)
+
+    } else if s.len() <= 1 { 
+        return Ok( vec![s] )
+    } else {
+        return Err("Malformed input string for split_nums. Input should be numbers or variables".into());
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
