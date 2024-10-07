@@ -30,7 +30,7 @@ impl Lexer {
     ///                          Op(Divide),
     ///                          Number(8.0)
     ///                      ]
-    pub fn new_inorder(s: &str) -> Result<Vec<Token>, Box<dyn Error>> {
+    pub fn new_inorder(s: &str) -> Result<Self, Box<dyn Error>> {
         let split_chars = ['+', '-', '/', '*', '(', ')'];
         let mut mid_split: Vec<Token> = s
             .split_whitespace()
@@ -56,7 +56,58 @@ impl Lexer {
                 }
             })
             .collect();
-        Ok(mid_split)
+        Ok(Lexer {
+            list: mid_split,
+            ordering: Ordering::In,
+        })
+    }
+
+    /// Consuming function that creates a pre-order list of tokens from an in-order list of tokens.
+    ///
+    /// e.g.
+    /// "3 * 2.0 + x"
+    /// => [
+    ///     Number(3.0),
+    ///     Op(Multiply),
+    ///     Number(2.0),
+    ///     Op(Plus),
+    ///     Var(Variable::X)
+    /// ]
+    /// becomes
+    /// [
+    ///     Op(Multiply),
+    ///     Number(3.0),
+    ///     Op(Plus),
+    ///     Number(2.0),
+    ///     Var(Variable::X)
+    /// ]
+    pub fn in_to_pre(&mut self) {
+        if self.ordering != Ordering::In {
+            panic!("The ordering must be in-order to use in_to_pre to change ordering");
+        }
+        //let mut in_order: Vec<Token> = self.list.into_iter().rev().collect();
+        let mut pre_order: Vec<Token> = vec![];
+        let mut stack: Vec<Token> = vec![];
+        for token in self.list.iter() {
+            match token {
+                Op(op) => {
+                    pre_order.push(Token::Op(*op));
+                    while let Some(num_var) = stack.pop() {
+                        pre_order.push(num_var);
+                    }
+                }
+                Number(n) => stack.push(Token::Number(*n)),
+                Var(v) => stack.push(Token::Var(*v)),
+                LParen => (),
+                RParen => (),
+            }
+        }
+        if let Some(last_token) = stack.pop() {
+            pre_order.push(last_token);
+        }
+
+        self.list = pre_order;
+        self.ordering = Ordering::Pre;
     }
     // TODO: Add error types for token that carry more information about the type of error
     // encountered, e.g. "Divide by zero", "Operator not followed by a number or variable", etc.
