@@ -1,4 +1,4 @@
-use crate::lexer::Token;
+use crate::token::Token;
 use binary_tree_ds::*;
 use std::cell::RefCell;
 use std::rc::Rc;

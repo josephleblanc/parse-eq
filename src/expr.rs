@@ -3,7 +3,8 @@
 // another example:
 // https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=1e93173b55bdad5e2908e32823611202
 
-use crate::lexer::Token;
+use crate::token::Token;
+use binary_tree_ds::*;
 
 pub struct Expr(Vec<Token>);
 
@@ -18,20 +19,19 @@ impl Expr {
             match token {
                 // TODO: Cover all cases of operator
                 Token::Number(n) => stack.push(*n),
-                Token::Op(crate::lexer::Operator::Multiply) => {
+                Token::Op(crate::token::Operator::Multiply) => {
                     let new = stack.pop().unwrap() * stack.pop().unwrap();
                     stack.push(new)
-                },
+                }
                 // more here
-                _ => todo!()
-                // TODO: Add error handling
+                _ => todo!(), // TODO: Add error handling
             }
         }
     }
     // TODO: Add a way to assign values to variables and evaluate with those values.
 }
 
-impl From<Vec< Token >> for Expr {
+impl From<Vec<Token>> for Expr {
     fn from(value: Vec<Token>) -> Self {
         Self(value)
     }
