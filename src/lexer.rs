@@ -63,6 +63,9 @@ impl Lexer {
     }
 
     /// Consuming function that creates a pre-order list of tokens from an in-order list of tokens.
+    /// Currently of limited use as it does not handle parentheses.
+    // TODO: Decide whether to scrap this function or not. It would be more usefully handled by
+    // the tree struct in tree.rs.
     ///
     /// e.g.
     /// "3 * 2.0 + x"

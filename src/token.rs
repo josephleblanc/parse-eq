@@ -56,6 +56,33 @@ impl Token {
     }
 }
 
+impl Priority for Token {
+    fn priority(&self) -> isize {
+        match self {
+            LParen => 1,
+            RParen => -1,
+            Op(op) => {
+                match op {
+                    Add => 2,
+                    Subtract => 2,
+                    Multiply => 3,
+                    Divide => 3,
+                    // more here
+                }
+            }
+            Number(_) => -1,
+            Var(_) => -1,
+        }
+    }
+}
+
+pub(crate) trait Priority {
+    // TODO: Make return type Option<isize> and see if anything breaks.
+    // Currently -1 is taking the place of None, not great practice but I don't want to do all the
+    // unwraps right now.
+    fn priority(&self) -> isize;
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 // This is placeholder for now - we could change the approach to something else,
 // e.g. We could get rid of this type and just have Token::Var(u8), where Var(0) is the first
@@ -87,7 +114,21 @@ pub enum Operator {
     // more here
 }
 
+impl Priority for Operator {
+    fn priority(&self) -> isize {
+        match self {
+            Add => 2,
+            Subtract => 2,
+            Multiply => 3,
+            Divide => 3,
+            // more here
+        }
+    }
+}
+
 impl Operator {
+    // TODO: Decide if this is redundant. Likely this role is filled in the newer 'priority'
+    // function of Token, to be used in the tree constructor.
     pub fn precedence(&self) -> Precedence {
         match self {
             Multiply => Precedence {

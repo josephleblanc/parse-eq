@@ -1,7 +1,6 @@
 #[cfg(test)]
 #[test]
 fn split_nums_simple() {
-    // TODO: add lexer tests here
     use parse_eq::lexer::split_nums;
     assert_eq!(vec!["1"], split_nums("1").unwrap());
     assert_eq!(vec!["12"], split_nums("12").unwrap());
