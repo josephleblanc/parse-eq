@@ -31,7 +31,9 @@ impl Lexer {
     ///                          Number(8.0)
     ///                      ]
     pub fn new_inorder(s: &str) -> Result<Self, Box<dyn Error>> {
-        let split_chars = ['+', '-', '/', '*', '(', ')'];
+        // Note: Each character which is processed into a struct (e.g. '+', 'x', 'y'), must be
+        // listed among the split chars here.
+        let split_chars = ['+', '-', '/', '*', '(', ')', 'x', 'y', 'z'];
         let mut mid_split: Vec<Token> = s
             .split_whitespace()
             .flat_map(|split| split.split_inclusive(split_chars))
@@ -51,6 +53,8 @@ impl Lexer {
                         "*" => Some(Op(Multiply)),
                         "/" => Some(Op(Divide)),
                         "x" => Some(Var(Variable::X)),
+                        "y" => Some(Var(Variable::Y)),
+                        "z" => Some(Var(Variable::Z)),
                         _ => None,
                     }
                 }

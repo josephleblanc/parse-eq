@@ -87,6 +87,8 @@ pub(crate) trait Priority {
 // This is placeholder for now - we could change the approach to something else,
 // e.g. We could get rid of this type and just have Token::Var(u8), where Var(0) is the first
 // variable (maybe x), and Var(1) is the second variable in the expression "( 2x - y ) / 4x"
+// When adding a new variable, remember to modify the lexer function, "new_inorder()" variable
+// split_chars to include whatever character represents the variable.
 pub enum Variable {
     X,
     Y,
@@ -95,9 +97,11 @@ pub enum Variable {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-// An enum for the different operator types our parser can handle.
+/// An enum for the different operator types our parser can handle.
 // This enum is subject to change, as it may be better to have the operators split into binary
 // operators (e.g. Multiply, Divide) and unary (e.g. Sine, Cosine).
+// When adding a new operator, remember to modify the lexer function, "new_inorder()" variable
+// split_chars to include whatever character represents the operator.
 pub enum Operator {
     Multiply,
     Divide,

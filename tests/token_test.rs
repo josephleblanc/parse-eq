@@ -98,10 +98,91 @@ fn lexer_operator_simple() {
 }
 
 #[test]
+fn lexer_variable_simple() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::Token;
+    use parse_eq::token::Variable;
+    assert_eq!(
+        vec![Token::Var(Variable::X)],
+        Lexer::new_inorder("x").unwrap().list
+    );
+    assert_eq!(
+        vec![Token::Var(Variable::Y)],
+        Lexer::new_inorder("y").unwrap().list
+    );
+    assert_eq!(
+        vec![Token::Var(Variable::Z)],
+        Lexer::new_inorder("z").unwrap().list
+    );
+    assert_ne!(
+        vec![Token::Var(Variable::X)],
+        Lexer::new_inorder("y").unwrap().list
+    );
+}
+
+#[test]
+fn lexer_variable_parens() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::Token;
+    use parse_eq::token::Variable;
+    assert_eq!(
+        vec![Token::LParen, Token::Var(Variable::X), Token::RParen],
+        Lexer::new_inorder("(x)").unwrap().list
+    );
+    assert_eq!(
+        vec![
+            Token::LParen,
+            Token::LParen,
+            Token::Var(Variable::X),
+            Token::RParen,
+            Token::RParen
+        ],
+        Lexer::new_inorder("((x))").unwrap().list
+    );
+    assert_eq!(
+        vec![
+            Token::LParen,
+            Token::LParen,
+            Token::LParen,
+            Token::LParen,
+            Token::Var(Variable::Y),
+            Token::RParen,
+            Token::RParen,
+            Token::RParen,
+            Token::RParen
+        ],
+        Lexer::new_inorder("(( ((y)) ) )").unwrap().list
+    );
+}
+
+#[test]
+fn lexer_variable_operator() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::Operator::*;
+    use parse_eq::token::Token::*;
+    use parse_eq::token::Variable;
+    assert_eq!(
+        vec![Var(Variable::X), Op(Add), Number(1.0)],
+        Lexer::new_inorder("x+1").unwrap().list
+    );
+    assert_eq!(
+        vec![LParen, Var(Variable::X), RParen, Op(Add), Number(1.0)],
+        Lexer::new_inorder("(x)+1").unwrap().list
+    );
+    assert_eq!(
+        vec![Var(Variable::X), Op(Add), LParen, Number(1.0), RParen],
+        Lexer::new_inorder("x+(1)").unwrap().list
+    );
+    assert_eq!(
+        vec![LParen, Var(Variable::X), Op(Add), Number(1.0), RParen],
+        Lexer::new_inorder("(x+1)").unwrap().list
+    );
+}
+
+#[test]
 fn lexer_operator() {
     use parse_eq::lexer::Lexer;
     use parse_eq::token::Operator::*;
-    use parse_eq::token::Token;
     use parse_eq::token::Token::*;
 
     let add = vec![Number(1.0), Op(Add), Number(2.0)];
@@ -119,7 +200,6 @@ fn lexer_operator() {
 fn lexer_operator_parentheses() {
     use parse_eq::lexer::Lexer;
     use parse_eq::token::Operator::*;
-    use parse_eq::token::Token;
     use parse_eq::token::Token::*;
 
     let add = vec![LParen, Number(1.0), Op(Add), Number(2.0), RParen];
@@ -137,7 +217,6 @@ fn lexer_operator_parentheses() {
 fn lexer_operator_parentheses_whitespace() {
     use parse_eq::lexer::Lexer;
     use parse_eq::token::Operator::*;
-    use parse_eq::token::Token;
     use parse_eq::token::Token::*;
 
     let add = vec![LParen, Number(1.0), Op(Add), Number(2.0), RParen];
