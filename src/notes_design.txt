@@ -1,0 +1,4 @@
+Try defining taking a derivative method for operators. E.g. the multiplication
+operation is morphed into the chain rule. This is an interesting idea taken
+from an article on "building a computer algebra system" here: 
+https://betterprogramming.pub/building-a-computer-algebra-system-in-go-part-1-multivariate-expressions-and-differentiation-291d948aa0e4
