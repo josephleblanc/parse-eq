@@ -79,3 +79,8 @@ impl Tree {
         stack.push(Rc::new(RefCell::new(root)));
     }
 }
+//impl PartialEq for TreeNodeRef {
+//    fn eq(&self, other: &Self) -> bool {
+//        self.isbn == other.isbn
+//    }
+//}
