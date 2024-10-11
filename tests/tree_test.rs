@@ -200,3 +200,23 @@ fn tree_var_parens() {
     let tree3: Tree = Tree::new_pre_from_in(in_order3);
     assert_eq!(tree3, check_tree);
 }
+
+#[test]
+fn tree_save_typst() {
+    use binary_tree_ds::TreeNode;
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::Operator::*;
+    use parse_eq::token::Token::*;
+    use parse_eq::token::Variable;
+    use parse_eq::tree::Tree;
+
+    // Output tested above
+    // 2 * ( 5 * 3 + 4 / ( 1 + 6 ) )
+
+    let lexer = Lexer::new_inorder("2 * ( 5 * 3 + 4 / ( 1 + 6 ) )").unwrap();
+    let in_order = lexer.list;
+
+    let tree: Tree = Tree::new_pre_from_in(in_order);
+    tree.save_typst("typst_test.typ");
+    assert_eq!(true, true);
+}

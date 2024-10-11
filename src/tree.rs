@@ -71,6 +71,13 @@ impl Tree {
         }
     }
 
+    pub fn save_typst(&self, file: &'static str) -> std::io::Result<()> {
+        let bin_tree_struct: binary_tree_ds::Tree<Token> =
+            binary_tree_ds::Tree::new(self.root.clone());
+        bin_tree_struct.save_typst(file)?;
+        Ok(())
+    }
+
     fn combine(ops: &mut Vec<Token>, stack: &mut Vec<TreeNodeRef<Token>>) {
         println!("Running combine");
         let mut root = TreeNode::new(ops.pop().unwrap(), None, None);
@@ -79,8 +86,3 @@ impl Tree {
         stack.push(Rc::new(RefCell::new(root)));
     }
 }
-//impl PartialEq for TreeNodeRef {
-//    fn eq(&self, other: &Self) -> bool {
-//        self.isbn == other.isbn
-//    }
-//}
