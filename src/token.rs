@@ -15,6 +15,7 @@
 use crate::token::Operator::*;
 use crate::token::Token::*;
 use std::error::Error;
+use std::fmt::Display;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 /// Tokens are the first internal representation of the input string.
@@ -47,6 +48,28 @@ impl TryFrom<&Token> for f32 {
             Token::Number(float) => Ok(*float),
             _ => Err("Invalid token cannot be parsed into a float."),
         }
+    }
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let base_string = match self {
+            LParen => String::from("("),
+            RParen => String::from(")"),
+            Op(op) => match op {
+                Multiply => String::from("\\*"),
+                Divide => String::from("/"),
+                Add => String::from("+"),
+                Subtract => String::from("-"),
+            },
+            Number(n) => format!("{number:.prec$}", prec = 3, number = n),
+            Var(v) => match v {
+                Variable::X => String::from("x"),
+                Variable::Y => String::from("y"),
+                Variable::Z => String::from("z"),
+            },
+        };
+        write!(f, "{}", base_string)
     }
 }
 
