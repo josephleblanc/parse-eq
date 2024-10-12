@@ -243,3 +243,18 @@ fn lexer_operator_parentheses_whitespace() {
             .list
     );
 }
+
+#[test]
+fn lexer_unop_trig() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::Operator::*;
+    use parse_eq::token::Token::*;
+    use parse_eq::token::UnaryOperator::*;
+
+    let sine = vec![UnOp(Sine)];
+    assert_eq!(sine, Lexer::new_inorder("sin").unwrap().list);
+    let cosine = vec![UnOp(Cosine)];
+    assert_eq!(cosine, Lexer::new_inorder("cos").unwrap().list);
+    let tangent = vec![UnOp(Tangent)];
+    assert_eq!(tangent, Lexer::new_inorder("tan").unwrap().list);
+}

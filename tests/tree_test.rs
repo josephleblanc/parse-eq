@@ -1,6 +1,9 @@
 //use std::cell::RefCell;
 //use std::rc::Rc;
 
+use std::fs::File;
+use std::io::Read;
+
 #[cfg(test)]
 #[test]
 fn tree_simple() {
@@ -203,11 +206,7 @@ fn tree_var_parens() {
 
 #[test]
 fn tree_save_typst() {
-    use binary_tree_ds::TreeNode;
     use parse_eq::lexer::Lexer;
-    use parse_eq::token::Operator::*;
-    use parse_eq::token::Token::*;
-    use parse_eq::token::Variable;
     use parse_eq::tree::Tree;
 
     // Output tested above
@@ -218,5 +217,34 @@ fn tree_save_typst() {
 
     let tree: Tree = Tree::new_pre_from_in(in_order);
     tree.save_typst("typst_test.typ");
-    assert_eq!(true, true);
+
+    let mut file = File::open("./typst_test.typ").unwrap();
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+    assert_eq!(
+        contents,
+        r#"
+#let data = (
+([\*], [2.000], ([+], ([\*], [5.000], [3.000]), ([/], [4.000], ([+], [1.000], [6.000]))))
+)
+
+#import "@preview/cetz:0.1.2": canvas, draw, tree
+
+#canvas(length: 1cm, {
+  import draw: *
+
+  set-style(content: (padding: .2),
+    fill: gray.lighten(70%),
+    stroke: gray.lighten(70%))
+
+  tree.tree(data, spread: 2.5, grow: 1.5, draw-node: (node, _) => {
+    circle((), radius: .45, stroke: none)
+    content((), node.content)
+  }, draw-edge: (from, to, _) => {
+    line((a: from, number: .6, abs: true, b: to),
+         (a: to, number: .6, abs: true, b: from), mark: (end: ">"))
+  }, name: "tree")
+})
+"#
+    );
 }

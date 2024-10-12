@@ -58,6 +58,13 @@ impl Tree {
                     }
                     ops.push(Token::Op(op));
                 }
+                Token::UnOp(un_op) => {
+                    while !ops.is_empty() && ops.last().unwrap().priority() >= un_op.priority() {
+                        println!("running UnOp while loop");
+                        Tree::combine(&mut ops, &mut stack);
+                    }
+                    ops.push(Token::UnOp(un_op));
+                }
             }
         }
 
@@ -81,8 +88,12 @@ impl Tree {
     fn combine(ops: &mut Vec<Token>, stack: &mut Vec<TreeNodeRef<Token>>) {
         println!("Running combine");
         let mut root = TreeNode::new(ops.pop().unwrap(), None, None);
-        root.right = Some(stack.pop().unwrap());
-        root.left = Some(stack.pop().unwrap());
+        if matches!(root.value, Token::UnOp(_)) {
+            root.right = Some(stack.pop().unwrap());
+        } else {
+            root.right = Some(stack.pop().unwrap());
+            root.left = Some(stack.pop().unwrap());
+        }
         stack.push(Rc::new(RefCell::new(root)));
     }
 }

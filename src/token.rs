@@ -26,6 +26,8 @@ pub enum Token {
     RParen,
     // Operators, e.g. +, -, /
     Op(Operator),
+    // Unary Operators, e.g. Sine, Cos
+    UnOp(UnaryOperator),
     // Numbers, e.g. 1.23, 2800000.0, e, pi
     Number(f32),
     // Variables, e.g. x, y, z
@@ -53,6 +55,7 @@ impl TryFrom<&Token> for f32 {
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use UnaryOperator::*;
         let base_string = match self {
             LParen => String::from("("),
             RParen => String::from(")"),
@@ -61,6 +64,11 @@ impl Display for Token {
                 Divide => String::from("/"),
                 Add => String::from("+"),
                 Subtract => String::from("-"),
+            },
+            UnOp(un_op) => match un_op {
+                Sine => String::from("sin"),
+                Cosine => String::from("cos"),
+                Tangent => String::from("tan"),
             },
             Number(n) => format!("{number:.prec$}", prec = 3, number = n),
             Var(v) => match v {
@@ -93,6 +101,8 @@ impl Priority for Token {
                     // more here
                 }
             }
+            // Unary operators should all have priority above all regular (binary) operators
+            UnOp(_) => 10,
             Number(_) => -1,
             Var(_) => -1,
         }
@@ -183,6 +193,21 @@ impl Operator {
             //Exponent => Precedence { precedence: 0, is_left: false },
             //Logarithm => Precedence { precedence: 0, is_left: false },
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum UnaryOperator {
+    Sine,
+    Cosine,
+    Tangent,
+}
+
+impl Priority for UnaryOperator {
+    /// Operator priority for unary operators.
+    /// This should always be higher than
+    fn priority(&self) -> isize {
+        10
     }
 }
 

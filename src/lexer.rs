@@ -1,6 +1,7 @@
 use crate::token::Operator::*;
 use crate::token::Token;
 use crate::token::Token::*;
+use crate::token::UnaryOperator;
 use crate::token::Variable;
 use std::error::Error;
 
@@ -55,6 +56,9 @@ impl Lexer {
                         "x" => Some(Var(Variable::X)),
                         "y" => Some(Var(Variable::Y)),
                         "z" => Some(Var(Variable::Z)),
+                        "sin" => Some(UnOp(UnaryOperator::Sine)),
+                        "cos" => Some(UnOp(UnaryOperator::Cosine)),
+                        "tan" => Some(UnOp(UnaryOperator::Tangent)),
                         _ => None,
                     }
                 }
@@ -102,6 +106,10 @@ impl Lexer {
                     while let Some(num_var) = stack.pop() {
                         pre_order.push(num_var);
                     }
+                }
+                UnOp(un_op) => {
+                    pre_order.push(Token::UnOp(*un_op));
+                    pre_order.push(stack.pop().unwrap());
                 }
                 Number(n) => stack.push(Token::Number(*n)),
                 Var(v) => stack.push(Token::Var(*v)),
