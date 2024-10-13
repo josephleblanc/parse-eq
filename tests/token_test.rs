@@ -247,7 +247,6 @@ fn lexer_operator_parentheses_whitespace() {
 #[test]
 fn lexer_unop_trig() {
     use parse_eq::lexer::Lexer;
-    use parse_eq::token::Operator::*;
     use parse_eq::token::Token::*;
     use parse_eq::token::UnaryOperator::*;
 
@@ -257,4 +256,55 @@ fn lexer_unop_trig() {
     assert_eq!(cosine, Lexer::new_inorder("cos").unwrap().list);
     let tangent = vec![UnOp(Tangent)];
     assert_eq!(tangent, Lexer::new_inorder("tan").unwrap().list);
+}
+
+#[test]
+fn lexer_unop_negation() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::Operator::*;
+    use parse_eq::token::Token::*;
+    use parse_eq::token::UnaryOperator::*;
+    use parse_eq::token::Variable;
+
+    let neg_one = vec![UnOp(Negation), Number(1.0)];
+    assert_eq!(neg_one, Lexer::new_inorder("-1").unwrap().list);
+
+    let double_neg = vec![UnOp(Negation), Number(1.0), Op(Add), Number(2.0)];
+    assert_eq!(double_neg, Lexer::new_inorder("-1 + 2").unwrap().list);
+
+    let trip_neg = vec![
+        UnOp(Negation),
+        Number(1.0),
+        Op(Add),
+        UnOp(Negation),
+        Number(2.0),
+    ];
+    assert_eq!(trip_neg, Lexer::new_inorder("-1 + -2").unwrap().list);
+
+    let trip_neg_var = vec![
+        UnOp(Negation),
+        Number(1.0),
+        Op(Add),
+        UnOp(Negation),
+        Var(Variable::X),
+    ];
+    assert_eq!(trip_neg_var, Lexer::new_inorder("-1 + -x").unwrap().list);
+
+    let check_vec = vec![
+        UnOp(Negation),
+        Number(2.0),
+        Op(Subtract),
+        LParen,
+        Number(5.0),
+        Op(Multiply),
+        UnOp(Negation),
+        UnOp(Sine),
+        UnOp(Negation),
+        Var(Variable::X),
+        RParen,
+        Op(Add),
+        Number(1.0),
+    ];
+    let lexer = Lexer::new_inorder("-2 - (5 * -sin -x ) + 1").unwrap();
+    assert_eq!(check_vec, lexer.list);
 }

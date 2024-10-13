@@ -26,20 +26,26 @@ impl Tree {
         let mut stack: Vec<TreeNodeRef<Token>> = vec![];
 
         for token in in_order {
+            println!("token: {:?}", token);
             match token {
                 Token::LParen => ops.push(token),
 
-                Token::Number(n) => stack.push(Rc::new(RefCell::new(TreeNode::new(
-                    Token::Number(n),
-                    None,
-                    None,
-                )))),
-                Token::Var(v) => stack.push(Rc::new(RefCell::new(TreeNode::new(
-                    Token::Var(v),
-                    None,
-                    None,
-                )))),
-
+                Token::Number(n) => {
+                    stack.push(TreeNode::new_rc(Token::Number(n), None, None));
+                    if matches!(ops.last(), Some(Token::UnOp(_))) {
+                        while matches!(ops.last(), Some(Token::UnOp(_))) {
+                            Tree::combine(&mut ops, &mut stack);
+                        }
+                    }
+                }
+                Token::Var(v) => {
+                    stack.push(TreeNode::new_rc(Token::Var(v), None, None));
+                    if matches!(ops.last(), Some(Token::UnOp(_))) {
+                        while matches!(ops.last(), Some(Token::UnOp(_))) {
+                            Tree::combine(&mut ops, &mut stack);
+                        }
+                    }
+                }
                 Token::RParen => {
                     while let Some(stack_op) = ops.last() {
                         if stack_op != &Token::LParen {
@@ -57,9 +63,6 @@ impl Tree {
                     ops.push(Token::Op(op));
                 }
                 Token::UnOp(un_op) => {
-                    while !ops.is_empty() && ops.last().unwrap().priority() >= un_op.priority() {
-                        Tree::combine(&mut ops, &mut stack);
-                    }
                     ops.push(Token::UnOp(un_op));
                 }
             }
@@ -82,13 +85,16 @@ impl Tree {
     }
 
     fn combine(ops: &mut Vec<Token>, stack: &mut Vec<TreeNodeRef<Token>>) {
-        println!("Running combine");
         let mut root = TreeNode::new(ops.pop().unwrap(), None, None);
+        println!("combine: {:?}", root.value);
         if matches!(root.value, Token::UnOp(_)) {
             root.right = Some(stack.pop().unwrap());
+            println!("unary right: {:?}", root.right);
         } else {
             root.right = Some(stack.pop().unwrap());
             root.left = Some(stack.pop().unwrap());
+            println!("binary op right: {:?}", root.right);
+            println!("binary op left: {:?}", root.left);
         }
         stack.push(Rc::new(RefCell::new(root)));
     }

@@ -66,6 +66,7 @@ impl Display for Token {
                 Subtract => String::from("-"),
             },
             UnOp(un_op) => match un_op {
+                Negation => String::from("-"),
                 Sine => String::from("sin"),
                 Cosine => String::from("cos"),
                 Tangent => String::from("tan"),
@@ -198,6 +199,7 @@ impl Operator {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum UnaryOperator {
+    Negation,
     Sine,
     Cosine,
     Tangent,

@@ -327,6 +327,41 @@ fn tree_unary_complex() {
 }
 
 #[test]
+fn tree_unary_negation() {
+    use binary_tree_ds::TreeNode;
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::Operator::*;
+    use parse_eq::token::Token::*;
+    use parse_eq::token::UnaryOperator::*;
+    use parse_eq::token::Variable;
+    use parse_eq::tree::Tree;
+
+    let one = TreeNode::new_rc(Number(1.0), None, None);
+    let two = TreeNode::new_rc(Number(2.0), None, None);
+    let five = TreeNode::new_rc(Number(5.0), None, None);
+    let x = TreeNode::new_rc(Var(Variable::X), None, None);
+
+    let neg_x = TreeNode::new_rc(UnOp(Negation), None, Some(x));
+    let sin_neg_x = TreeNode::new_rc(UnOp(Sine), None, Some(neg_x));
+    let neg_two = TreeNode::new_rc(UnOp(Negation), None, Some(two));
+
+    let neg_sin_neg_x = TreeNode::new_rc(UnOp(Negation), None, Some(sin_neg_x));
+    let five_neg_sine_neg_x = TreeNode::new_rc(Op(Multiply), Some(five), Some(neg_sin_neg_x));
+    let neg_two_minus = TreeNode::new_rc(Op(Subtract), Some(neg_two), Some(five_neg_sine_neg_x));
+    let plus_one = TreeNode::new_rc(Op(Add), Some(neg_two_minus), Some(one));
+    let check_tree = Tree::new(plus_one);
+
+    let lexer = Lexer::new_inorder("-2 - (5 * -sin -x ) + 1").unwrap();
+    let in_order = lexer.list;
+    println!("lexer.list: {:?}", in_order);
+
+    let tree: Tree = Tree::new_pre_from_in(in_order);
+    tree.save_typst("typst_test2.typ").unwrap();
+
+    assert_eq!(check_tree, tree);
+}
+
+#[test]
 fn tree_save_typst() {
     use parse_eq::lexer::Lexer;
     use parse_eq::tree::Tree;

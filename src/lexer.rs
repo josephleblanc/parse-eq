@@ -35,7 +35,7 @@ impl Lexer {
         // Note: Each character which is processed into a struct (e.g. '+', 'x', 'y'), must be
         // listed among the split chars here.
         let split_chars = ['+', '-', '/', '*', '(', ')', 'x', 'y', 'z'];
-        let mut mid_split: Vec<Token> = s
+        let mut mid_split = s
             .split_whitespace()
             .flat_map(|split| split.split_inclusive(split_chars))
             .flat_map(split_nums)
@@ -63,9 +63,35 @@ impl Lexer {
                     }
                 }
             })
-            .collect();
+            .enumerate()
+            .peekable();
+        let mut list: Vec<Token> = vec![];
+        while let Some((i, mut token)) = mid_split.next() {
+            if let Some((_, peeked)) = mid_split.peek() {
+                // Turn subtraction '-' to negation if first token and the next token is a valid
+                // target for negation.
+                if i == 0 && token == Op(Subtract)
+                    || (matches!(peeked, LParen)
+                        && matches!(peeked, Var(_))
+                        && matches!(peeked, UnOp(_))
+                        && matches!(peeked, Number(_)))
+                {
+                    token = UnOp(UnaryOperator::Negation);
+                } else if *peeked == Op(Subtract)
+                    && (matches!(token, Op(_)) || matches!(token, UnOp(_)))
+                {
+                    // Turn subtraction '-' to negation if it immediately follows a regular
+                    // (binary) operation.
+                    list.push(token);
+                    mid_split.next();
+                    token = UnOp(UnaryOperator::Negation);
+                }
+            }
+            list.push(token);
+        }
+        //let list: Vec<Token> = mid_split.collect();
         Ok(Lexer {
-            list: mid_split,
+            list,
             ordering: Ordering::In,
         })
     }
