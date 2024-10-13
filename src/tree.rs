@@ -42,7 +42,6 @@ impl Tree {
 
                 Token::RParen => {
                     while let Some(stack_op) = ops.last() {
-                        println!("running RParen while loop");
                         if stack_op != &Token::LParen {
                             Tree::combine(&mut ops, &mut stack);
                         } else {
@@ -53,14 +52,12 @@ impl Tree {
                 }
                 Token::Op(op) => {
                     while !ops.is_empty() && ops.last().unwrap().priority() >= op.priority() {
-                        println!("running Op while loop");
                         Tree::combine(&mut ops, &mut stack);
                     }
                     ops.push(Token::Op(op));
                 }
                 Token::UnOp(un_op) => {
                     while !ops.is_empty() && ops.last().unwrap().priority() >= un_op.priority() {
-                        println!("running UnOp while loop");
                         Tree::combine(&mut ops, &mut stack);
                     }
                     ops.push(Token::UnOp(un_op));
@@ -68,8 +65,7 @@ impl Tree {
             }
         }
 
-        while stack.len() > 1 {
-            println!("running end stack while loop");
+        while stack.len() > 1 || !ops.is_empty() {
             Tree::combine(&mut ops, &mut stack);
         }
 
