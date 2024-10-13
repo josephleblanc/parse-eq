@@ -14,7 +14,6 @@
 
 use crate::token::Operator::*;
 use crate::token::Token::*;
-use std::error::Error;
 use std::fmt::Display;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -164,39 +163,6 @@ impl Priority for Operator {
     }
 }
 
-impl Operator {
-    // TODO: Decide if this is redundant. Likely this role is filled in the newer 'priority'
-    // function of Token, to be used in the tree constructor.
-    pub fn precedence(&self) -> Precedence {
-        match self {
-            Multiply => Precedence {
-                precedence: 2,
-                is_left: false,
-            },
-            Divide => Precedence {
-                precedence: 2,
-                is_left: true,
-            },
-            Add => Precedence {
-                precedence: 1,
-                is_left: false,
-            },
-            Subtract => Precedence {
-                precedence: 1,
-                is_left: true,
-            },
-            //Sine => Precedence { precedence: 0, is_left: false },
-            //Cosine => Precedence { precedence: 0, is_left: false },
-            //Tangent => Precedence { precedence: 0, is_left: false },
-            //ArcSine => Precedence { precedence: 0, is_left: false },
-            //ArcCosine => Precedence { precedence: 0, is_left: false },
-            //ArcTangent => Precedence { precedence: 0, is_left: false },
-            //Exponent => Precedence { precedence: 0, is_left: false },
-            //Logarithm => Precedence { precedence: 0, is_left: false },
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum UnaryOperator {
     Negation,
@@ -211,9 +177,4 @@ impl Priority for UnaryOperator {
     fn priority(&self) -> isize {
         10
     }
-}
-
-pub struct Precedence {
-    precedence: u8,
-    is_left: bool,
 }

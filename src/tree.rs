@@ -19,14 +19,13 @@ impl Tree {
     /// Construct a new binary tree representation of the expression from an in-order vec of
     /// tokens.
     /// Assumes the vec is well-formed, including appropriate number of parentheses.
-    /// Algorithm mostly cribbed from this C++ implementation:
+    /// Algorithm mostly cribbed from this C++ implementation, modified to include unary operators:
     ///     https://leetcode.ca/2020-04-14-1597-Build-Binary-Expression-Tree-From-Infix-Expression/
     pub fn new_pre_from_in(in_order: Vec<Token>) -> Tree {
         let mut ops: Vec<Token> = vec![];
         let mut stack: Vec<TreeNodeRef<Token>> = vec![];
 
         for token in in_order {
-            println!("token: {:?}", token);
             match token {
                 Token::LParen => ops.push(token),
 
@@ -86,15 +85,12 @@ impl Tree {
 
     fn combine(ops: &mut Vec<Token>, stack: &mut Vec<TreeNodeRef<Token>>) {
         let mut root = TreeNode::new(ops.pop().unwrap(), None, None);
-        println!("combine: {:?}", root.value);
         if matches!(root.value, Token::UnOp(_)) {
             root.right = Some(stack.pop().unwrap());
             println!("unary right: {:?}", root.right);
         } else {
             root.right = Some(stack.pop().unwrap());
             root.left = Some(stack.pop().unwrap());
-            println!("binary op right: {:?}", root.right);
-            println!("binary op left: {:?}", root.left);
         }
         stack.push(Rc::new(RefCell::new(root)));
     }
