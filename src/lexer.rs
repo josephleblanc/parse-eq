@@ -1,60 +1,23 @@
-// This is where we parse the string into a vec of tokens.
-//
-// The goal is to take a string and return a vec which may be iterated over to create an iterator of
-// Stmt, a type we define in ast.rs.
-// An example of how this should be used:
-//
-// let input_string = "(1 + 13x)/2";
-// tokens: Vec<Token> = Token::lexer(input_string);
-// expr: Vec<Stmt> = Stmt::from_tokens(tokens);
-//
-// Once we have a way to turn the string into a Vec<Token>, and a way to turn Vec<Token> into
-// Vec<Stmt>, we can implement Iterator for Token and Expr, as iterators are probably a better way
-// to go about this.
-
-use crate::lexer::Operator::*;
-use crate::lexer::Token::*;
+use crate::token::Operator::*;
+use crate::token::Token;
+use crate::token::Token::*;
+use crate::token::UnaryOperator;
+use crate::token::Variable;
 use std::error::Error;
 
+pub struct Lexer {
+    pub list: Vec<Token>,
+    pub ordering: Ordering,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
-/// Tokens are the first internal representation of the input string.
-pub enum Token {
-    // Left paren
-    LParen,
-    // Right paren
-    RParen,
-    // Operators, e.g. +, -, /
-    Op(Operator),
-    // Numbers, e.g. 1.23, 2800000.0, e, pi
-    Number(f32),
-    // Variables, e.g. x, y, z
-    Var(Variable),
+pub enum Ordering {
+    In,
+    Pre,
+    Post,
 }
 
-impl TryFrom<Token> for f32 {
-    type Error = &'static str;
-    fn try_from(token: Token) -> Result<Self, Self::Error> {
-        match token {
-            Token::Number(float) => Ok(float),
-            _ => Err("Invalid token cannot be parsed into a float."),
-        }
-    }
-}
-impl TryFrom<&Token> for f32 {
-    type Error = &'static str;
-    fn try_from(token: &Token) -> Result<Self, Self::Error> {
-        match token {
-            Token::Number(float) => Ok(*float),
-            _ => Err("Invalid token cannot be parsed into a float."),
-        }
-    }
-}
-
-impl Token {
-    pub fn is_op(&self) -> bool {
-        matches!(self, Op(_))
-    }
-
+impl Lexer {
     /// Takes input string and returns tokens.
     /// e.g.
     /// "(3 * 2.0 + x) / 8" => [
@@ -68,9 +31,11 @@ impl Token {
     ///                          Op(Divide),
     ///                          Number(8.0)
     ///                      ]
-    pub fn lexer(s: &str) -> Result<Vec<Token>, Box<dyn Error>> {
-        let split_chars = ['+', '-', '/', '*', '(', ')'];
-        let mut mid_split: Vec<Token> = s
+    pub fn new_inorder(s: &str) -> Result<Self, Box<dyn Error>> {
+        // Note: Each character which is processed into a struct (e.g. '+', 'x', 'y'), must be
+        // listed among the split chars here.
+        let split_chars = ['+', '-', '/', '*', '(', ')', 'x', 'y', 'z'];
+        let mut mid_split = s
             .split_whitespace()
             .flat_map(|split| split.split_inclusive(split_chars))
             .flat_map(split_nums)
@@ -89,12 +54,101 @@ impl Token {
                         "*" => Some(Op(Multiply)),
                         "/" => Some(Op(Divide)),
                         "x" => Some(Var(Variable::X)),
+                        "y" => Some(Var(Variable::Y)),
+                        "z" => Some(Var(Variable::Z)),
+                        "sin" => Some(UnOp(UnaryOperator::Sine)),
+                        "cos" => Some(UnOp(UnaryOperator::Cosine)),
+                        "tan" => Some(UnOp(UnaryOperator::Tangent)),
                         _ => None,
                     }
                 }
             })
-            .collect();
-        Ok(mid_split)
+            .enumerate()
+            .peekable();
+        let mut list: Vec<Token> = vec![];
+        while let Some((i, mut token)) = mid_split.next() {
+            if let Some((_, peeked)) = mid_split.peek() {
+                // Turn subtraction '-' to negation if first token and the next token is a valid
+                // target for negation.
+                if i == 0 && token == Op(Subtract)
+                    || (matches!(peeked, LParen)
+                        && matches!(peeked, Var(_))
+                        && matches!(peeked, UnOp(_))
+                        && matches!(peeked, Number(_)))
+                {
+                    token = UnOp(UnaryOperator::Negation);
+                } else if *peeked == Op(Subtract)
+                    && (matches!(token, Op(_)) || matches!(token, UnOp(_)))
+                {
+                    // Turn subtraction '-' to negation if it immediately follows a regular
+                    // (binary) operation.
+                    list.push(token);
+                    mid_split.next();
+                    token = UnOp(UnaryOperator::Negation);
+                }
+            }
+            list.push(token);
+        }
+        //let list: Vec<Token> = mid_split.collect();
+        Ok(Lexer {
+            list,
+            ordering: Ordering::In,
+        })
+    }
+
+    /// Consuming function that creates a pre-order list of tokens from an in-order list of tokens.
+    /// Currently of limited use as it does not handle parentheses.
+    // TODO: Decide whether to scrap this function or not. It would be more usefully handled by
+    // the tree struct in tree.rs.
+    ///
+    /// e.g.
+    /// "3 * 2.0 + x"
+    /// => [
+    ///     Number(3.0),
+    ///     Op(Multiply),
+    ///     Number(2.0),
+    ///     Op(Plus),
+    ///     Var(Variable::X)
+    /// ]
+    /// becomes
+    /// [
+    ///     Op(Multiply),
+    ///     Number(3.0),
+    ///     Op(Plus),
+    ///     Number(2.0),
+    ///     Var(Variable::X)
+    /// ]
+    pub fn in_to_pre(&mut self) {
+        if self.ordering != Ordering::In {
+            panic!("The ordering must be in-order to use in_to_pre to change ordering");
+        }
+        //let mut in_order: Vec<Token> = self.list.into_iter().rev().collect();
+        let mut pre_order: Vec<Token> = vec![];
+        let mut stack: Vec<Token> = vec![];
+        for token in self.list.iter() {
+            match token {
+                Op(op) => {
+                    pre_order.push(Token::Op(*op));
+                    while let Some(num_var) = stack.pop() {
+                        pre_order.push(num_var);
+                    }
+                }
+                UnOp(un_op) => {
+                    pre_order.push(Token::UnOp(*un_op));
+                    pre_order.push(stack.pop().unwrap());
+                }
+                Number(n) => stack.push(Token::Number(*n)),
+                Var(v) => stack.push(Token::Var(*v)),
+                LParen => (),
+                RParen => (),
+            }
+        }
+        if let Some(last_token) = stack.pop() {
+            pre_order.push(last_token);
+        }
+
+        self.list = pre_order;
+        self.ordering = Ordering::Pre;
     }
     // TODO: Add error types for token that carry more information about the type of error
     // encountered, e.g. "Divide by zero", "Operator not followed by a number or variable", etc.
@@ -140,71 +194,4 @@ pub fn split_nums(s: &str) -> Result<Vec<&str>, Box<dyn Error>> {
             "Malformed input string for split_nums. Input should be numbers or variables".into(),
         );
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-// This is placeholder for now - we could change the approach to something else,
-// e.g. We could get rid of this type and just have Token::Var(u8), where Var(0) is the first
-// variable (maybe x), and Var(1) is the second variable in the expression "( 2x - y ) / 4x"
-pub enum Variable {
-    X,
-    Y,
-    Z,
-    // more here
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-// An enum for the different operator types our parser can handle.
-// This enum is subject to change, as it may be better to have the operators split into binary
-// operators (e.g. Multiply, Divide) and unary (e.g. Sine, Cosine).
-pub enum Operator {
-    Multiply,
-    Divide,
-    Add,
-    Subtract,
-    //Sine,
-    //Cosine,
-    //Tangent,
-    //ArcSine,
-    //ArcCosine,
-    //ArcTangent,
-    //Exponent,
-    //Logarithm,
-    // more here
-}
-
-impl Operator {
-    pub fn precedence(&self) -> Precedence {
-        match self {
-            Multiply => Precedence {
-                precedence: 2,
-                is_left: false,
-            },
-            Divide => Precedence {
-                precedence: 2,
-                is_left: true,
-            },
-            Add => Precedence {
-                precedence: 1,
-                is_left: false,
-            },
-            Subtract => Precedence {
-                precedence: 1,
-                is_left: true,
-            },
-            //Sine => Precedence { precedence: 0, is_left: false },
-            //Cosine => Precedence { precedence: 0, is_left: false },
-            //Tangent => Precedence { precedence: 0, is_left: false },
-            //ArcSine => Precedence { precedence: 0, is_left: false },
-            //ArcCosine => Precedence { precedence: 0, is_left: false },
-            //ArcTangent => Precedence { precedence: 0, is_left: false },
-            //Exponent => Precedence { precedence: 0, is_left: false },
-            //Logarithm => Precedence { precedence: 0, is_left: false },
-        }
-    }
-}
-
-pub struct Precedence {
-    precedence: u8,
-    is_left: bool,
 }
