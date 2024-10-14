@@ -1,16 +1,4 @@
 // This is where we parse the string into a vec of tokens.
-//
-// The goal is to take a string and return a vec which may be iterated over to create an iterator of
-// Stmt, a type we define in ast.rs.
-// An example of how this should be used:
-//
-// let input_string = "(1 + 13x)/2";
-// tokens: Vec<Token> = Token::lexer(input_string);
-// expr: Vec<Stmt> = Stmt::from_tokens(tokens);
-//
-// Once we have a way to turn the string into a Vec<Token>, and a way to turn Vec<Token> into
-// Vec<Stmt>, we can implement Iterator for Token and Expr, as iterators are probably a better way
-// to go about this.
 
 use crate::token::Operator::*;
 use crate::token::Token::*;
