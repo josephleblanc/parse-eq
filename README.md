@@ -31,7 +31,8 @@ Below is a list of all elements that should be implemented:
 - [ ] ArcSine
 - [ ] ArcCosine
 - [ ] ArcTangent
-- ...
+
+... more here
 ### Token::Number(f32)
 Numbers are currently handled as type `f32`, but it may be more appropriate to
 treat them as rational numbers, constant irrational numbers (e.g. 'e', 'pi'),
@@ -121,31 +122,31 @@ Where the following letters `a`, `b`, etc. are any possible nodes
 
 **Basic identities**
 *Negation*
-[ ] `-(-a) -> a`
+- [ ] `-(-a) -> a`
 *Addition and Subtraction*
-[ ] `a - a => 0`
-[ ] `a + 0 => a`
-[ ] `a - 0 => a`
-[ ] `0 + a => a`
-[ ] `0 - a => -a`
+- [ ] `a - a => 0`
+- [ ] `a + 0 => a`
+- [ ] `a - 0 => a`
+- [ ] `0 + a => a`
+- [ ] `0 - a => -a`
 *Multiplication and Division*
-[ ] `a / a => 1`
-[ ] `-a / a => -1`
-[ ] `a / -a => -1`
-[ ] `-a / -a => 1`
-[ ] `a * a => 1`
-[ ] `-a * a => -1`
-[ ] `a * -a => -1`
-[ ] `-a * -a => 1`
-[ ] `a * 1 => a`
-[ ] `a * -1 => -a`
-[ ] `a * 1 => -a`
+- [ ] `a / a => 1`
+- [ ] `-a / a => -1`
+- [ ] `a / -a => -1`
+- [ ] `-a / -a => 1`
+- [ ] `a * a => 1`
+- [ ] `-a * a => -1`
+- [ ] `a * -a => -1`
+- [ ] `-a * -a => 1`
+- [ ] `a * 1 => a`
+- [ ] `a * -1 => -a`
+- [ ] `a * 1 => -a`
 
 **Relations**
 *Multiplication distributive over addition & subtraction*
-[ ] `a * (b + c) => ab + ac`
-[ ] `a * (b - c) => ab - ac`
-[ ] `(b + c) * a => ba + ca`
-[ ] `(b - c) * a => ab - ac`
+- [ ] `a * (b + c) => ab + ac`
+- [ ] `a * (b - c) => ab - ac`
+- [ ] `(b + c) * a => ba + ca`
+- [ ] `(b - c) * a => ab - ac`
 
 ... more here
