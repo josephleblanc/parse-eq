@@ -356,7 +356,7 @@ fn tree_unary_negation() {
     println!("lexer.list: {:?}", in_order);
 
     let tree: Tree = Tree::new_pre_from_in(in_order);
-    tree.save_typst("typst_test2.typ").unwrap();
+    tree.save_typst_tree("typst_test2.typ").unwrap();
 
     assert_eq!(check_tree, tree);
 }
@@ -369,11 +369,11 @@ fn tree_save_typst() {
     // Output tested above
     // 2 * ( 5 * 3 + 4 / ( 1 + 6 ) )
 
-    let lexer = Lexer::new_inorder("2 * ( 5 * 3 + 4 / ( 1 + 6 ) )").unwrap();
+    let lexer = Lexer::new_inorder("-2 * ( 5 * 3 + 4 / ( 1 + -sin -(x/2) ) )").unwrap();
     let in_order = lexer.list;
 
     let tree: Tree = Tree::new_pre_from_in(in_order);
-    tree.save_typst("typst_test.typ").unwrap();
+    tree.save_typst_tree("typst_test.typ").unwrap();
 
     let mut file = File::open("./typst_test.typ").unwrap();
     let mut contents = String::new();
@@ -382,7 +382,7 @@ fn tree_save_typst() {
         contents,
         r#"
 #let data = (
-([\*], [2.000], ([+], ([\*], [5.000], [3.000]), ([/], [4.000], ([+], [1.000], [6.000]))))
+([\*], ([-], [2.000]), ([+], ([\*], [5.000], [3.000]), ([/], [4.000], ([+], [1.000], ([-], ([sin], ([-], ([/], [x], [2.000]))))))))
 )
 
 #import "@preview/cetz:0.1.2": canvas, draw, tree

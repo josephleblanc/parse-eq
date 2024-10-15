@@ -1,3 +1,4 @@
+use crate::lexer::Ordering;
 use crate::token::Priority;
 use crate::token::Token;
 use binary_tree_ds::*;
@@ -76,11 +77,17 @@ impl Tree {
         }
     }
 
-    pub fn save_typst(&self, file: &'static str) -> std::io::Result<()> {
+    pub fn save_typst_tree(&self, file: &'static str) -> std::io::Result<()> {
         let bin_tree_struct: binary_tree_ds::Tree<Token> =
             binary_tree_ds::Tree::new(self.root.clone());
         bin_tree_struct.save_typst(file)?;
         Ok(())
+    }
+
+    pub fn create_vec(&self, order: Ordering) -> Vec<Token> {
+        let mut stack: Vec<Token> = vec![];
+        push_into_order(&self.root, &mut stack, order);
+        stack
     }
 
     fn combine(ops: &mut Vec<Token>, stack: &mut Vec<TreeNodeRef<Token>>) {
@@ -93,5 +100,25 @@ impl Tree {
             root.left = Some(stack.pop().unwrap());
         }
         stack.push(Rc::new(RefCell::new(root)));
+    }
+}
+
+/// Recursive function used in method `create_vec` to take the tree and return a vector of the tree
+/// in a given order. See `Tree::create_vec` for more.
+fn push_into_order(node_ref: &TreeNodeRef<Token>, stack: &mut Vec<Token>, order: Ordering) {
+    if order == Ordering::Pre {
+        stack.push(node_ref.borrow().value);
+    }
+    if let Some(ref left) = node_ref.borrow().left {
+        push_into_order(left, stack, order);
+    }
+    if order == Ordering::In {
+        stack.push(node_ref.borrow().value);
+    }
+    if let Some(ref right) = node_ref.borrow().right {
+        push_into_order(right, stack, order);
+    }
+    if order == Ordering::Post {
+        stack.push(node_ref.borrow().value);
     }
 }
