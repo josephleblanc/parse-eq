@@ -426,3 +426,28 @@ fn tree_create_vec() {
     }
     assert_eq!(check_in_order, in_order_vec);
 }
+
+#[test]
+fn tree_detect_negation() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::lexer::Ordering;
+    use parse_eq::token::{
+        Token,
+        Token::{LParen, Number, Op, RParen, UnOp},
+        UnaryOperator,
+    };
+    use parse_eq::tree::Tree;
+
+    let lexer = Lexer::new_inorder("- ( -2 )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![
+        UnOp(UnaryOperator::Negation),
+        LParen,
+        UnOp(UnaryOperator::Negation),
+        Number(2.0),
+        RParen,
+    ];
+
+    assert_eq!(check_vec, in_order);
+    let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+}

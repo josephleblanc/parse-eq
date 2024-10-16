@@ -70,11 +70,17 @@ impl Lexer {
             if let Some((_, peeked)) = mid_split.peek() {
                 // Turn subtraction '-' to negation if first token and the next token is a valid
                 // target for negation.
-                if i == 0 && token == Op(Subtract)
-                    || (matches!(peeked, LParen)
-                        && matches!(peeked, Var(_))
-                        && matches!(peeked, UnOp(_))
-                        && matches!(peeked, Number(_)))
+                if *peeked == Op(Subtract)
+                    && (matches!(token, Number(_)) || token == RParen || matches!(token, Var(_)))
+                {
+                    list.push(token);
+                    (_, token) = mid_split.next().unwrap();
+                } else if token == Op(Subtract)
+                    && (i == 0
+                        || matches!(peeked, LParen)
+                        || matches!(peeked, Var(_))
+                        || matches!(peeked, UnOp(_))
+                        || matches!(peeked, Number(_)))
                 {
                     token = UnOp(UnaryOperator::Negation);
                 } else if *peeked == Op(Subtract)
