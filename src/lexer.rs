@@ -68,13 +68,24 @@ impl Lexer {
         let mut list: Vec<Token> = vec![];
         while let Some((i, mut token)) = mid_split.next() {
             if let Some((_, peeked)) = mid_split.peek() {
-                // Turn subtraction '-' to negation if first token and the next token is a valid
-                // target for negation.
+                // if the current token can be followed by a subtraction, leave the next token as
+                // subtraction and continue.
+                // e.g. 2 - 3
+                //      ^
+                //      Because a subtraction can follow '2', push 2 to list, push subtaction to
+                //      list, and repeat loop.
+                // e.g. - ( -2)
+                //      ^
+                //      Because a subtraction cannot follow '-', this if statement doesn't trigger
+                //      and moves on to the others.
                 if *peeked == Op(Subtract)
                     && (matches!(token, Number(_)) || token == RParen || matches!(token, Var(_)))
                 {
                     list.push(token);
                     (_, token) = mid_split.next().unwrap();
+
+                // Turn subtraction '-' to negation if first token and the next token is a valid
+                // target for negation.
                 } else if token == Op(Subtract)
                     && (i == 0
                         || matches!(peeked, LParen)

@@ -9,6 +9,7 @@ type TreeNodeRef<T: Sized + Copy> = Rc<RefCell<TreeNode<T>>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
+    // TODO: Decide later whether this should be pub or not.
     root: TreeNodeRef<Token>,
 }
 
@@ -94,12 +95,15 @@ impl Tree {
         let mut root = TreeNode::new(ops.pop().unwrap(), None, None);
         if matches!(root.value, Token::UnOp(_)) {
             root.right = Some(stack.pop().unwrap());
-            println!("unary right: {:?}", root.right);
         } else {
             root.right = Some(stack.pop().unwrap());
             root.left = Some(stack.pop().unwrap());
         }
         stack.push(Rc::new(RefCell::new(root)));
+    }
+
+    pub fn get_root_clone(&self) -> TreeNode<Token> {
+        self.root.borrow().clone()
     }
 }
 

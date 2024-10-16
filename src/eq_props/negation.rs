@@ -6,12 +6,20 @@ use crate::token::{
 use binary_tree_ds::TreeNode;
 
 pub trait Negation {
-    fn is_negation(&self) -> bool;
+    fn is_double_neg(&self) -> bool;
 }
 
 impl Negation for TreeNode<Token> {
-    fn is_negation(&self) -> bool {
+    /// Checks whether the node is a double negative branch, e.g.
+    ///     neg
+    ///        \
+    ///         neg
+    ///           \
+    ///           node
+    fn is_double_neg(&self) -> bool {
         if let Some(ref right) = self.right {
+            //if right.borrow().right.is_none() {
+            //}
             return self.value == UnOp(UnaryOperator::Negation)
                 && right.borrow().value == UnOp(UnaryOperator::Negation);
         } else {

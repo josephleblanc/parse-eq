@@ -1,6 +1,7 @@
 //use std::cell::RefCell;
 //use std::rc::Rc;
 
+use parse_eq::eq_props::negation::Negation;
 use std::fs::File;
 use std::io::Read;
 
@@ -432,12 +433,14 @@ fn tree_detect_negation() {
     use parse_eq::lexer::Lexer;
     use parse_eq::lexer::Ordering;
     use parse_eq::token::{
+        Operator::*,
         Token,
-        Token::{LParen, Number, Op, RParen, UnOp},
-        UnaryOperator,
+        Token::{LParen, Number, Op, RParen, UnOp, Var},
+        UnaryOperator, Variable,
     };
     use parse_eq::tree::Tree;
 
+    // 1. Double negated number
     let lexer = Lexer::new_inorder("- ( -2 )").unwrap();
     let in_order = lexer.list;
     let check_vec: Vec<Token> = vec![
@@ -447,7 +450,68 @@ fn tree_detect_negation() {
         Number(2.0),
         RParen,
     ];
-
     assert_eq!(check_vec, in_order);
     let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+    let root = tree.get_root_clone();
+    assert!(root.is_double_neg());
+
+    // 2. Single negation number
+    let lexer = Lexer::new_inorder("( -2 )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![LParen, UnOp(UnaryOperator::Negation), Number(2.0), RParen];
+    assert_eq!(check_vec, in_order);
+    let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+    let root = tree.get_root_clone();
+    assert!(!root.is_double_neg());
+
+    // 3. Double negation variable
+    let lexer = Lexer::new_inorder("- ( -x )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![
+        UnOp(UnaryOperator::Negation),
+        LParen,
+        UnOp(UnaryOperator::Negation),
+        Var(Variable::X),
+        RParen,
+    ];
+    assert_eq!(check_vec, in_order);
+    let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+    let root = tree.get_root_clone();
+    assert!(root.is_double_neg());
+
+    // 4. Double negation with addition operation
+    let lexer = Lexer::new_inorder("1 + - ( -x )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![
+        Number(1.0),
+        Op(Add),
+        UnOp(UnaryOperator::Negation),
+        LParen,
+        UnOp(UnaryOperator::Negation),
+        Var(Variable::X),
+        RParen,
+    ];
+    assert_eq!(check_vec, in_order);
+    let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+
+    let root = tree.get_root_clone();
+    assert!(root.right.unwrap().borrow().is_double_neg());
+
+    // 5. Double negation with subtract operation
+    let lexer = Lexer::new_inorder("1 - - ( -x )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![
+        Number(1.0),
+        Op(Subtract),
+        UnOp(UnaryOperator::Negation),
+        LParen,
+        UnOp(UnaryOperator::Negation),
+        Var(Variable::X),
+        RParen,
+    ];
+    assert_eq!(check_vec, in_order);
+    let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+
+    let root = tree.get_root_clone();
+    assert!(root.right.unwrap().borrow().is_double_neg());
 }
