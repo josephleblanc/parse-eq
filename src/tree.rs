@@ -105,20 +105,111 @@ impl Tree {
 
 /// Recursive function used in method `create_vec` to take the tree and return a vector of the tree
 /// in a given order. See `Tree::create_vec` for more.
+/// Neither variables nor numbers should have parentheses surrounding them alone, and parentheses
+/// should only be presented when neccesary.
+///
+/// Examples:
+/// 5.000 -> 5.000, not (5.000)
+/// x -> x, not (x)
+///
+/// The tree
+///         *
+///        / \
+///       3   +
+///          / \
+///         2   4
+/// becomes
+/// 3 * (2 + 4)
+///
+/// The tree
+///         +
+///        / \
+///       3   +
+///          / \
+///         2   4
+/// becomes
+/// 3 + 2 + 4, not 3 + (2 + 4)
 fn push_into_order(node_ref: &TreeNodeRef<Token>, stack: &mut Vec<Token>, order: Ordering) {
+    // Early return to avoid adding extraneous parentheses
+    if node_ref.borrow().is_leaf() {
+        stack.push(node_ref.borrow().value);
+        return;
+    }
+
     if order == Ordering::Pre {
         stack.push(node_ref.borrow().value);
     }
     if let Some(ref left) = node_ref.borrow().left {
-        push_into_order(left, stack, order);
+        if !matches!(left.borrow().value, Token::Number(_))
+            && !matches!(left.borrow().value, Token::Var(_))
+            && node_ref.borrow().value.priority() > left.borrow().value.priority()
+        {
+            stack.push(Token::LParen);
+            push_into_order(left, stack, order);
+            stack.push(Token::RParen);
+        } else {
+            push_into_order(left, stack, order);
+        }
     }
     if order == Ordering::In {
         stack.push(node_ref.borrow().value);
     }
     if let Some(ref right) = node_ref.borrow().right {
-        push_into_order(right, stack, order);
+        if !matches!(right.borrow().value, Token::Number(_))
+            && !matches!(right.borrow().value, Token::Var(_))
+            && node_ref.borrow().value.priority() > right.borrow().value.priority()
+        {
+            stack.push(Token::LParen);
+            push_into_order(right, stack, order);
+            stack.push(Token::RParen);
+        } else {
+            push_into_order(right, stack, order);
+        }
     }
     if order == Ordering::Post {
         stack.push(node_ref.borrow().value);
     }
 }
+
+///// Recursive function used in method `create_vec` to take the tree and return a vector of the tree
+///// in a given order. See `Tree::create_vec` for more.
+//fn push_into_order(
+//    node_ref: &TreeNodeRef<Token>,
+//    parent: Option<&TreeNodeRef<Token>>,
+//    stack: &mut Vec<Token>,
+//    order: Ordering,
+//) {
+//    // Early return to avoid adding extraneous parentheses
+//    if node_ref.borrow().is_leaf() {
+//        stack.push(node_ref.borrow().value);
+//        return;
+//    }
+//
+//    if order == Ordering::Pre {
+//        stack.push(node_ref.borrow().value);
+//    }
+//    // handle left child
+//    // if putting into `In` order, also insert a left parenthesis, but only if the parent operation
+//    // is of higher priority, e.g. 2 * (1 + 3), and not when the operations are of the same
+//    // priority or when the parent has lower priority, e.g. 2 + 1 + 3 or 2 * 1 + 3.
+//    if let Some(ref left) = node_ref.borrow().left {
+//        if let Some(parent_op) = parent {
+//            if order == Ordering::In
+//                && parent_op.borrow().value.priority() > left.borrow().value.priority()
+//            {
+//                stack.push(Token::LParen);
+//            }
+//        }
+//        push_into_order(left, Some(node_ref), stack, order);
+//    }
+//    if order == Ordering::In {
+//        stack.push(node_ref.borrow().value);
+//    }
+//    if let Some(ref right) = node_ref.borrow().right {
+//        push_into_order(right, Some(node_ref), stack, order);
+//        stack.push(Token::RParen);
+//    }
+//    if order == Ordering::Post {
+//        stack.push(node_ref.borrow().value);
+//    }
+//}

@@ -405,3 +405,24 @@ fn tree_save_typst() {
 "#
     );
 }
+
+#[test]
+fn tree_create_vec() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::lexer::Ordering;
+    use parse_eq::tree::Tree;
+
+    let lexer = Lexer::new_inorder("-2 * ( 5 * 3 + 4 / ( 1 + -sin -(x/2) ) )").unwrap();
+    let in_order = lexer.list;
+
+    let tree: Tree = Tree::new_pre_from_in(in_order);
+    let in_order_vec = tree.create_vec(Ordering::In);
+
+    let check_lexer = Lexer::new_inorder("-2 * ( 5 * 3 + 4 / ( 1 + -sin -(x/2) ) )").unwrap();
+    let check_in_order = check_lexer.list;
+
+    for (check_val, test_val) in check_in_order.iter().zip(in_order_vec.iter()) {
+        println!("check: {}\t test: {}", check_val, test_val);
+    }
+    assert_eq!(check_in_order, in_order_vec);
+}
