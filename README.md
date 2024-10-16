@@ -76,6 +76,7 @@ module doing most of the heavy lifting.
 ### saving to typst
 - [x] save binary tree graph representation to typst with
 `some_tree.save_typst("filename.typ")`;
+- [x] convert from tree into `Vec<Tokens>`
 - [ ] save expression representation to typst with yet-to-be-named function.
 
 ### parsing
