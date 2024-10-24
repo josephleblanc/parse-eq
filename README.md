@@ -113,6 +113,15 @@ the BET, we must first detect the pattern in the first tree above, where `a`,
 `b`, and `c` are any nodes either in their own tree or a branch of another
 tree, then mutate that branch to the second BET.
 
+#### Design
+For each of the below rules three functions must be defined for the `TreeNode<Token>`:
+
+1. Detect the pattern, e.g.
+```rust
+    fn is_double_neg(&self) -> bool;
+```
+2. Mutate the branch
+
 #### Concerns
 There are many possible rules to include, and so it would be well worth looking
 into a way to either compose rules or somehow reduce the requirement of

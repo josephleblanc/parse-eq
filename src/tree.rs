@@ -5,12 +5,12 @@ use binary_tree_ds::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-type TreeNodeRef<T: Sized + Copy> = Rc<RefCell<TreeNode<T>>>;
+pub type TreeNodeRef<T: Sized + Copy> = Rc<RefCell<TreeNode<T>>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
     // TODO: Decide later whether this should be pub or not.
-    root: TreeNodeRef<Token>,
+    pub(crate) root: TreeNodeRef<Token>,
 }
 
 impl Tree {

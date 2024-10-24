@@ -2,6 +2,7 @@
 //use std::rc::Rc;
 
 use parse_eq::eq_props::negation::Negation;
+use parse_eq::tree::TreeNodeRef;
 use std::fs::File;
 use std::io::Read;
 
@@ -431,7 +432,6 @@ fn tree_create_vec() {
 #[test]
 fn tree_detect_negation() {
     use parse_eq::lexer::Lexer;
-    use parse_eq::lexer::Ordering;
     use parse_eq::token::{
         Operator::*,
         Token,
@@ -514,4 +514,95 @@ fn tree_detect_negation() {
 
     let root = tree.get_root_clone();
     assert!(root.right.unwrap().borrow().is_double_neg());
+}
+
+#[test]
+fn find_double_negation() {
+    use parse_eq::lexer::Lexer;
+    use parse_eq::lexer::Ordering;
+    use parse_eq::token::{
+        Operator::*,
+        Token,
+        Token::{LParen, Number, Op, RParen, UnOp, Var},
+        UnaryOperator, Variable,
+    };
+    use parse_eq::tree::Tree;
+
+    // 1. Double negated number
+    let lexer = Lexer::new_inorder("- ( -2 )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![
+        UnOp(UnaryOperator::Negation),
+        LParen,
+        UnOp(UnaryOperator::Negation),
+        Number(2.0),
+        RParen,
+    ];
+    assert_eq!(check_vec, in_order);
+    let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+    let root = tree.get_root_clone();
+    assert!(root.is_double_neg());
+
+    let neg_id = tree.neg_id_first();
+    println!("Neg Id: {:?}", neg_id);
+    assert_eq!(Some(root.get_id()), neg_id);
+
+    // 2. subtraction of double negated variable x
+    let lexer = Lexer::new_inorder("1 - - ( -x )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![
+        Number(1.0),
+        Op(Subtract),
+        UnOp(UnaryOperator::Negation),
+        LParen,
+        UnOp(UnaryOperator::Negation),
+        Var(Variable::X),
+        RParen,
+    ];
+    assert_eq!(check_vec, in_order);
+    let tree: Tree = Tree::new_pre_from_in(in_order.clone());
+
+    let root = tree.get_root_clone();
+
+    let neg_id = tree.neg_id_first();
+    println!("Neg Id: {:?}", neg_id);
+    assert_eq!(Some(root.clone().right.unwrap().borrow().get_id()), neg_id);
+    assert_ne!(Some(root.get_id()), neg_id);
+}
+
+#[test]
+fn do_double_negation() {
+    use binary_tree_ds::TreeNode;
+    use parse_eq::lexer::Lexer;
+    use parse_eq::token::{
+        Token,
+        Token::{LParen, Number, RParen, UnOp},
+        UnaryOperator,
+    };
+    use parse_eq::tree::Tree;
+
+    // 1. Double negated number
+    let lexer = Lexer::new_inorder("- ( -2 )").unwrap();
+    let in_order = lexer.list;
+    let check_vec: Vec<Token> = vec![
+        UnOp(UnaryOperator::Negation),
+        LParen,
+        UnOp(UnaryOperator::Negation),
+        Number(2.0),
+        RParen,
+    ];
+    assert_eq!(check_vec, in_order);
+    let mut tree: Tree = Tree::new_pre_from_in(in_order.clone());
+    let root = tree.get_root_clone();
+    assert!(root.is_double_neg());
+
+    let neg_id = tree.neg_id_first().unwrap();
+    println!("Neg Id: {:?}", neg_id);
+    let _ = tree.do_double_neg(neg_id);
+    let test_tree = Tree::new(TreeNode::new_rc(Number(2.0), None, None));
+
+    let check_vec_tree: Vec<Token> = vec![Number(2.0)];
+    let check_tree = Tree::new_pre_from_in(check_vec_tree);
+
+    assert_eq!(check_tree, test_tree);
 }
